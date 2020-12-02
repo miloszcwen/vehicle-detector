@@ -10,8 +10,6 @@ import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import SignIn from './components/signIn/SignIn';
 import Register from './components/register/Register';
 
-console.log(process.env.REACT_APP_ClarifAI_API_KEY);
-
 const app = new Clarifai.App({
   apiKey: process.env.REACT_APP_ClarifAI_API_KEY
  });
@@ -24,7 +22,8 @@ class App extends Component {
       input: "",
       imgUrl: "",
       box: {},
-      route: "signin"
+      route: "signin",
+      isSignedIn: false,
     }
   }
 
@@ -50,25 +49,33 @@ class App extends Component {
   }
 
     onButtonSubmit = ()=>{
-    this.setState({imgUrl: this.state.input});
-    app.models.predict(
-      'f950c58836faebadfdd44d709fb7cef6',
-      this.state.input)
-    .then(response=>this.displayCarBox(this.calculateCarLocation(response)))
-    .catch(err=>console.log(err))
+      if(this.state.input){
+        this.setState({imgUrl: this.state.input});
+        app.models.predict(
+          'f950c58836faebadfdd44d709fb7cef6',
+          this.state.input)
+        .then(response=>this.displayCarBox(this.calculateCarLocation(response)))
+        .catch(err=>console.log(err))
+      }
   }
 
   onRouteChange = (route)=>{
+    if(route==="home"){
+      this.setState({isSignedIn: true});
+    } else if(route==="signin"){
+      this.setState({isSignedIn: false});
+    }
     this.setState({route: route})
   }
 
   render() {
+    const {imgUrl, isSignedIn, box, route} = this.state;
     return (
       <>
     <div className="App">
       <Particles className="particles" />
-      <Navigation onRouteChange={this.onRouteChange}/>
-      { this.state.route === "home"
+      <Navigation onRouteChange={this.onRouteChange} isSignedIn={isSignedIn}/>
+      { route === "home"
       ? <> <Logo />
       <Rank />
       <ImageLinkForm
@@ -76,11 +83,11 @@ class App extends Component {
         onButtonSubmit={this.onButtonSubmit}
       />
       <ImageRecognition
-        imgUrl={this.state.imgUrl}
-        box={this.state.box}
+        imgUrl={imgUrl}
+        box={box}
       />
       </>
-      : (this.state.route === "signin"
+      : (route === "signin"
       ? <SignIn onRouteChange={this.onRouteChange}/>
       : <Register onRouteChange={this.onRouteChange}/>
       )}
