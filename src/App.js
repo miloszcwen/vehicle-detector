@@ -7,10 +7,13 @@ import Logo from './components/logo/Logo';
 import Rank from './components/rank/Rank';
 import ImageRecognition from './components/imageRecognition/ImageRecognition';
 import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
+import SignIn from './components/signIn/SignIn';
+import Register from './components/register/Register';
 
+console.log(process.env.REACT_APP_ClarifAI_API_KEY);
 
 const app = new Clarifai.App({
-  apiKey: '7fca17d226f84d299757661ace55a4f9'
+  apiKey: process.env.REACT_APP_ClarifAI_API_KEY
  });
 
 
@@ -20,7 +23,8 @@ class App extends Component {
     this.state = {
       input: "",
       imgUrl: "",
-      box: {}
+      box: {},
+      route: "signin"
     }
   }
 
@@ -54,13 +58,18 @@ class App extends Component {
     .catch(err=>console.log(err))
   }
 
+  onRouteChange = (route)=>{
+    this.setState({route: route})
+  }
+
   render() {
     return (
       <>
     <div className="App">
       <Particles className="particles" />
-      <Navigation />
-      <Logo />
+      <Navigation onRouteChange={this.onRouteChange}/>
+      { this.state.route === "home"
+      ? <> <Logo />
       <Rank />
       <ImageLinkForm
         onInputChange={this.onInputChange}
@@ -70,6 +79,11 @@ class App extends Component {
         imgUrl={this.state.imgUrl}
         box={this.state.box}
       />
+      </>
+      : (this.state.route === "signin"
+      ? <SignIn onRouteChange={this.onRouteChange}/>
+      : <Register onRouteChange={this.onRouteChange}/>
+      )}
     </div>
     </>
     )
