@@ -5,27 +5,34 @@ class Register extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            signInEmail: '',
-            signInPassword: ''
+            registerName: '',
+            registerEmail: '',
+            registerPassword: ''
         }
     }
+    onNameChange = (event)=>{
+        this.setState({registerName: event.target.value})
+    }
     onEmailChange = (event)=>{
-        this.setState({signInEmail: event.target.value})
+        this.setState({registerEmail: event.target.value})
     }
     onPasswordChange = (event)=>{
-        this.setState({signInPassword: event.target.value})
+        this.setState({registerPassword: event.target.value})
     }
-    onSubmitSignIn = ()=>{
-        fetch('http://localhost:3000/signin', {
+    onRegister = ()=>{
+        fetch('http://localhost:3000/register', {
             method: 'post',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
-                email: this.state.signInEmail,
-                password: this.state.signInPassword
+                name: this.state.registerName,
+                email: this.state.registerEmail,
+                password: this.state.registerPassword
             })
-        }).then(response=>response.json())
-        .then(data=>{
-            if (data === 'success'){
+        })
+        .then(response=>response.json())
+        .then(user=>{
+            if (user){
+                this.props.loadUser(user);
                 this.props.onRouteChange("home");
             }
         })
@@ -40,25 +47,35 @@ class Register extends React.Component {
                 <legend className="f2 fw6 ph0 mh0">Register</legend>
                 <div className="mv3">
                     <label className="db fw6 lh-copy f6" htmlFor="name">Name</label>
-                    <input className="br2 pa2 input-reset bg-transparent hover-bg-black hover-white w-100" type="text" name="name"  id="name"/>
+                    <input className="br2 pa2 input-reset bg-transparent hover-bg-black hover-white w-100"
+                    type="text" name="name"  id="name"
+                    onChange={this.onNameChange}
+                    />
                 </div>
                 <div className="mt3">
                     <label className="db fw6 lh-copy f6" htmlFor="email-address">Email</label>
-                    <input className="br2 pa2 input-reset bg-transparent hover-bg-black hover-white w-100" type="email" name="email-address"  id="email-address"/>
+                    <input className="br2 pa2 input-reset bg-transparent hover-bg-black hover-white w-100"
+                    type="email" name="email-address"  id="email-address"
+                    onChange={this.onEmailChange}
+                    />
                 </div>
                 <div className="mv3">
                     <label className="db fw6 lh-copy f6" htmlFor="password">Password</label>
-                    <input className="br2 b pa2 input-reset bg-transparent hover-bg-black hover-white w-100" type="password" name="password"  id="password"/>
+                    <input className="br2 b pa2 input-reset bg-transparent hover-bg-black hover-white w-100"
+                    type="password" name="password"  id="password"
+                    onChange={this.onPasswordChange}
+                    />
                 </div>
                 </fieldset>
                 <div className="">
                 <input
-                onClick={ () => onRouteChange("home") }
+                onClick={ this.onRegister }
                 className="br2 b ph3 pv2 input-reset bg-transparent grow pointer f6 dib submit"
                 type="submit" value="Register"/>
                 </div>
                 <div className="lh-copy mt3">
-                <p onClick={ () => onRouteChange("signin")} className="f6 links dim db pointer">Sign in</p>
+                <p onClick={ () => onRouteChange("signin")}
+                className="f6 links dim db pointer">Sign in</p>
                 </div>
             </div>
             </main>

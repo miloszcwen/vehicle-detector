@@ -1,10 +1,10 @@
 import React from 'react';
 
-const Rank=()=>{
+const Rank=({userName, userRank})=>{
     return (
         <div>
             <div className='f3'>
-                {/* {'User, your rank is...'} */}
+                { `${userName}, your current rank is ${userRank}` }
             </div>
             <div className='f1'>
                 {/* {'#5'} */}
