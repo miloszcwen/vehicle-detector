@@ -28,7 +28,7 @@ class App extends Component {
         id: "",
         name: "",
         email: "",
-        entries: 0,
+        carCounter: 0,
         joined: ""
       }
     }
@@ -39,7 +39,7 @@ class App extends Component {
       id: data.id,
       name: data.name,
       email: data.email,
-      entries: data.entries,
+      carCounter: data.carCounter,
       joined: data.joined
     }});
   }
@@ -65,13 +65,28 @@ class App extends Component {
     this.setState({input: e.target.value});
   }
 
-    onButtonSubmit = ()=>{
+    onPictureSubmit = ()=>{
       if(this.state.input){
         this.setState({imgUrl: this.state.input});
         app.models.predict(
           'f950c58836faebadfdd44d709fb7cef6',
           this.state.input)
-        .then(response=>this.displayCarBox(this.calculateCarLocation(response)))
+        .then(response=>{
+          if (response){
+            fetch('http://localhost:3000/image', {
+              method: 'put',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                 id: this.state.user.id
+              })
+           })
+           .then(response=>response.json())
+           .then(count=>{
+              this.setState(Object.assign(this.state.user,{carCounter: count}))
+          })
+          }
+          this.displayCarBox(this.calculateCarLocation(response))
+        })
         .catch(err=>console.log(err))
       }
   }
@@ -99,11 +114,11 @@ class App extends Component {
       ? <> <Logo />
       <Rank
         userName={this.state.user.name}
-        userRank={this.state.user.rank}
+        carCounter={this.state.user.carCounter}
       />
       <ImageLinkForm
         onInputChange={this.onInputChange}
-        onButtonSubmit={this.onButtonSubmit}
+        onButtonSubmit={this.onPictureSubmit}
       />
       <ImageRecognition
         imgUrl={imgUrl}
