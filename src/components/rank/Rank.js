@@ -4,10 +4,10 @@ const Rank=({userName, carCounter})=>{
     return (
         <div>
             <div className='f3'>
-                { `${userName}, you've already detected...` }
+                { `${userName}, cars already detected...` }
             </div>
             <div className='f1'>
-                { `${carCounter} cars`}
+                { `${carCounter}`}
             </div>
         </div>
     )

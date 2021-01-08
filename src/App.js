@@ -1,6 +1,5 @@
 import './App.css';
 import Particles from 'react-particles-js';
-import Clarifai from 'clarifai';
 import React, {Component} from 'react';
 import Navigation from './components/navigation/Navigation';
 import Logo from './components/logo/Logo';
@@ -10,10 +9,22 @@ import ImageLinkForm from './components/ImageLinkForm/ImageLinkForm';
 import SignIn from './components/signIn/SignIn';
 import Register from './components/register/Register';
 
-const app = new Clarifai.App({
-  apiKey: process.env.REACT_APP_ClarifAI_API_KEY
- });
 
+
+const initialState = {
+  input: "",
+  imgUrl: "",
+  box: {},
+  route: "signin",
+  isSignedIn: false,
+  user: {
+    id: "",
+    name: "",
+    email: "",
+    carCounter: 0,
+    joined: ""
+  }
+}
 
 class App extends Component {
   constructor(props){
@@ -68,9 +79,14 @@ class App extends Component {
     onPictureSubmit = ()=>{
       if(this.state.input){
         this.setState({imgUrl: this.state.input});
-        app.models.predict(
-          'f950c58836faebadfdd44d709fb7cef6',
-          this.state.input)
+        fetch('http://localhost:3000/imageurl', {
+              method: 'post',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({
+                 input: this.state.input
+              })
+           })
+           .then(response=>response.json())
         .then(response=>{
           if (response){
             fetch('http://localhost:3000/image', {
@@ -84,6 +100,7 @@ class App extends Component {
            .then(count=>{
               this.setState(Object.assign(this.state.user,{carCounter: count}))
           })
+          .catch(error=>{console.log(error)});
           }
           this.displayCarBox(this.calculateCarLocation(response))
         })
@@ -95,12 +112,9 @@ class App extends Component {
     if(route==="home"){
       this.setState({isSignedIn: true});
     } else if(route==="signin"){
-      this.setState({isSignedIn: false});
+      this.setState(initialState);
     }
     this.setState({route: route})
-    this.setState({input: ""})
-    this.setState({imgUrl: ""})
-    this.setState({box: {}})
   }
 
   render() {
@@ -143,6 +157,7 @@ class App extends Component {
 
 export default App;
 
+// test images:
 // mix:
 // https://images.freeimages.com/images/large-previews/389/girl-3-1438550.jpg
 // https://media.istockphoto.com/photos/smiling-executive-using-smart-phone-on-city-street-picture-id924802018
@@ -154,7 +169,7 @@ export default App;
 // https://images.unsplash.com/photo-1563522288861-ed8f8bbe9279?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=750&q=80
 // https://images.unsplash.com/photo-1502489597346-dad15683d4c2?ixlib=rb-1.2.1&ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&auto=format&fit=crop&w=667&q=80
 
-// models:
+// clarafai models:
 // d02b4508df58432fbb84e800597b8959 --face
 // aa7f35c01e0642fda5cf400f543e7c40 - general
 // f950c58836faebadfdd44d709fb7cef6 - vehicle

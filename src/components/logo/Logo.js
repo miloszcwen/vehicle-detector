@@ -5,9 +5,7 @@ import car from './car.png'
 
 
 class Logo extends React.Component {
-    constructor() {
-        super();
-      }
+
     render(){
         return (
             <>
