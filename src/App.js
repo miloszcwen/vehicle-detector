@@ -157,6 +157,8 @@ class App extends Component {
 
 export default App;
 
+
+// for api testing:
 // test images:
 // mix:
 // https://images.freeimages.com/images/large-previews/389/girl-3-1438550.jpg
