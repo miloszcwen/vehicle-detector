@@ -8,7 +8,7 @@ Main features:
 - Frontend developed in React
 - Backend developed in Node.js
 - PostgreSQL database for storing user's data
-- For testing, you can use `test@wp.pl` as a login and `test` as a password.
+- For testing, you can use `test@wp.pl` as a login and `test` as a password
 
 [See live](https://miloszcwen.github.io/vehicle-detector/)
 
