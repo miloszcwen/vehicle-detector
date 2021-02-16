@@ -14,7 +14,7 @@ Main features:
 
 [See backend code here](https://github.com/miloszcwen/vechicle-detector-backend)
 
-![App screenshot](https://mcwen.netlify.app/assets/project1.f1209898c7f5a7a44986a0c268f572d7.jpg)
+![App screenshot](https://mcwen.netlify.app/assets/pro1.981dc3f4e667346f29e6aa8ea71c819c.mp4)
 
 To do:
 - [ ] add JWT authorization
