@@ -53,7 +53,7 @@ export default function Register({ loadUser, onRouteChange }) {
                 type="email"
                 name="email-address"
                 id="email-address"
-                value={registerName}
+                value={registerEmail}
                 onChange={(e) => setRegisterEmail(e.target.value)}
               />
             </div>
