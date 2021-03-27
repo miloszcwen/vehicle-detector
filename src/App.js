@@ -1,6 +1,6 @@
 import "./App.css";
 import Particles from "react-particles-js";
-import React, { Component } from "react";
+import React, { useState } from "react";
 import Navigation from "./components/navigation/Navigation";
 import Logo from "./components/logo/Logo";
 import Rank from "./components/rank/Rank";
@@ -9,53 +9,37 @@ import ImageLinkForm from "./components/ImageLinkForm/ImageLinkForm";
 import SignIn from "./components/signIn/SignIn";
 import Register from "./components/register/Register";
 
-const initialState = {
-  input: "",
-  imgUrl: "",
-  box: {},
-  route: "signin",
-  isSignedIn: false,
-  user: {
-    id: "",
-    name: "",
-    email: "",
-    carCounter: 0,
-    joined: "",
-  },
+const initialUser = {
+  id: "",
+  name: "",
+  email: "",
+  carCounter: 0,
+  joined: "",
 };
 
-class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      input: "",
-      imgUrl: "",
-      box: {},
-      route: "signin",
-      isSignedIn: false,
-      user: {
-        id: "",
-        name: "",
-        email: "",
-        carCounter: 0,
-        joined: "",
-      },
-    };
-  }
+export default function App() {
+  const [input, setInput] = useState("");
+  const [imgUrl, setImgUrl] = useState("");
+  const [box, setBox] = useState({});
+  const [route, setRoute] = useState("signin");
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [user, setUser] = useState(initialUser);
 
-  loadUser = (data) => {
-    this.setState({
-      user: {
-        id: data.id,
-        name: data.name,
-        email: data.email,
-        carCounter: data.carCounter,
-        joined: data.joined,
-      },
+  const loadUser = (data) => {
+    setUser({
+      id: data.id,
+      name: data.name,
+      email: data.email,
+      carCounter: data.carCounter,
+      joined: data.joined,
     });
   };
 
-  calculateCarLocation = (data) => {
+  const onInputChange = (e) => {
+    setInput(e.target.value);
+  };
+
+  const calculateCarLocation = (data) => {
     const clarifaiCar =
       data.outputs[0].data.regions[0].region_info.bounding_box;
     const image = document.getElementById("inputImage");
@@ -69,101 +53,221 @@ class App extends Component {
     };
   };
 
-  displayCarBox = (box) => {
-    this.setState({ box: box });
+  const displayCarBox = (box) => {
+    setBox(box);
   };
 
-  onInputChange = (e) => {
-    this.setState({ input: e.target.value });
-  };
-
-  onPictureSubmit = () => {
-    if (this.state.input) {
-      this.setState({ imgUrl: this.state.input });
+  const onPictureSubmit = () => {
+    if (input) {
+      setImgUrl(input);
       fetch("https://protected-taiga-19734.herokuapp.com/imageurl", {
         method: "post",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          input: this.state.input,
-        }),
+        body: JSON.stringify({ input: imgUrl }),
       })
         .then((response) => response.json())
         .then((response) => {
           if (response) {
+            console.log("resp", response);
             fetch("https://protected-taiga-19734.herokuapp.com/image", {
               method: "put",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                id: this.state.user.id,
-              }),
+              body: JSON.stringify({ id: user.id }),
             })
               .then((response) => response.json())
               .then((count) => {
-                this.setState(
-                  Object.assign(this.state.user, { carCounter: count })
-                );
+                console.log("cnt:", count);
+                setUser({ ...user, carCounter: count });
               })
               .catch((error) => {
                 console.log(error);
               });
           }
-          this.displayCarBox(this.calculateCarLocation(response));
+          displayCarBox(calculateCarLocation(response));
         })
         .catch((err) => console.log(err));
     }
   };
 
-  onRouteChange = (route) => {
+  const onRouteChange = (route) => {
     if (route === "home") {
-      this.setState({ isSignedIn: true });
+      setIsSignedIn(true);
     } else if (route === "signin") {
-      this.setState(initialState);
+      setInput("");
+      setImgUrl("");
+      setBox({});
+      setIsSignedIn(false);
+      setUser(initialUser);
     }
-    this.setState({ route: route });
+    setRoute(route);
   };
 
-  render() {
-    const { imgUrl, isSignedIn, box, route } = this.state;
-    return (
-      <>
-        <div className="App">
-          <Particles className="particles" />
-          <Navigation
-            onRouteChange={this.onRouteChange}
-            isSignedIn={isSignedIn}
-          />
-          {route === "home" ? (
-            <>
-              {" "}
-              <Logo />
-              <Rank
-                userName={this.state.user.name}
-                carCounter={this.state.user.carCounter}
-              />
-              <ImageLinkForm
-                onInputChange={this.onInputChange}
-                onButtonSubmit={this.onPictureSubmit}
-              />
-              <ImageRecognition imgUrl={imgUrl} box={box} />
-            </>
-          ) : route === "signin" ? (
-            <SignIn
-              loadUser={this.loadUser}
-              onRouteChange={this.onRouteChange}
+  return (
+    <>
+      <div className="App">
+        <Particles className="particles" />
+        <Navigation onRouteChange={onRouteChange} isSignedIn={isSignedIn} />
+        {route === "home" ? (
+          <>
+            {" "}
+            <Logo />
+            <Rank userName={user.name} carCounter={user.carCounter} />
+            <ImageLinkForm
+              onInputChange={onInputChange}
+              onButtonSubmit={onPictureSubmit}
             />
-          ) : (
-            <Register
-              loadUser={this.loadUser}
-              onRouteChange={this.onRouteChange}
-            />
-          )}
-        </div>
-      </>
-    );
-  }
+            <ImageRecognition imgUrl={imgUrl} box={box} />
+          </>
+        ) : route === "signin" ? (
+          <SignIn loadUser={loadUser} onRouteChange={onRouteChange} />
+        ) : (
+          <Register loadUser={loadUser} onRouteChange={onRouteChange} />
+        )}
+      </div>
+    </>
+  );
 }
 
-export default App;
+// class App extends Component {
+//   constructor(props) {
+//     super(props);
+//     this.state = {
+//       input: "",
+//       imgUrl: "",
+//       box: {},
+//       route: "signin",
+//       isSignedIn: false,
+//       user: {
+//         id: "",
+//         name: "",
+//         email: "",
+//         carCounter: 0,
+//         joined: "",
+//       },
+//     };
+//   }
+
+//   loadUser = (data) => {
+//     this.setState({
+//       user: {
+//         id: data.id,
+//         name: data.name,
+//         email: data.email,
+//         carCounter: data.carCounter,
+//         joined: data.joined,
+//       },
+//     });
+//   };
+
+//   calculateCarLocation = (data) => {
+//     const clarifaiCar =
+//       data.outputs[0].data.regions[0].region_info.bounding_box;
+//     const image = document.getElementById("inputImage");
+//     const width = Number(image.width);
+//     const height = Number(image.height);
+//     return {
+//       leftCol: clarifaiCar.left_col * width,
+//       topRow: clarifaiCar.top_row * height,
+//       rightCol: width - clarifaiCar.right_col * width,
+//       bottomRow: height - clarifaiCar.bottom_row * height,
+//     };
+//   };
+
+//   displayCarBox = (box) => {
+//     this.setState({ box: box });
+//   };
+
+//   onInputChange = (e) => {
+//     this.setState({ input: e.target.value });
+//   };
+
+//   onPictureSubmit = () => {
+//     if (this.state.input) {
+//       this.setState({ imgUrl: this.state.input });
+//       fetch("https://protected-taiga-19734.herokuapp.com/imageurl", {
+//         method: "post",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({
+//           input: this.state.input,
+//         }),
+//       })
+//         .then((response) => response.json())
+//         .then((response) => {
+//           if (response) {
+//             fetch("https://protected-taiga-19734.herokuapp.com/image", {
+//               method: "put",
+//               headers: { "Content-Type": "application/json" },
+//               body: JSON.stringify({
+//                 id: this.state.user.id,
+//               }),
+//             })
+//               .then((response) => response.json())
+//               .then((count) => {
+//                 this.setState(
+//                   Object.assign(this.state.user, { carCounter: count })
+//                 );
+//               })
+//               .catch((error) => {
+//                 console.log(error);
+//               });
+//           }
+//           this.displayCarBox(this.calculateCarLocation(response));
+//         })
+//         .catch((err) => console.log(err));
+//     }
+//   };
+
+//   onRouteChange = (route) => {
+//     if (route === "home") {
+//       this.setState({ isSignedIn: true });
+//     } else if (route === "signin") {
+//       this.setState(initialState);
+//     }
+//     this.setState({ route: route });
+//   };
+
+//   render() {
+//     const { imgUrl, isSignedIn, box, route } = this.state;
+//     return (
+//       <>
+//         <div className="App">
+//           <Particles className="particles" />
+//           <Navigation
+//             onRouteChange={this.onRouteChange}
+//             isSignedIn={isSignedIn}
+//           />
+//           {route === "home" ? (
+//             <>
+//               {" "}
+//               <Logo />
+//               <Rank
+//                 userName={this.state.user.name}
+//                 carCounter={this.state.user.carCounter}
+//               />
+//               <ImageLinkForm
+//                 onInputChange={this.onInputChange}
+//                 onButtonSubmit={this.onPictureSubmit}
+//               />
+//               <ImageRecognition imgUrl={imgUrl} box={box} />
+//             </>
+//           ) : route === "signin" ? (
+//             <SignIn
+//               loadUser={this.loadUser}
+//               onRouteChange={this.onRouteChange}
+//             />
+//           ) : (
+//             <Register
+//               loadUser={this.loadUser}
+//               onRouteChange={this.onRouteChange}
+//             />
+//           )}
+//         </div>
+//       </>
+//     );
+//   }
+// }
+
+// export default App;
 
 // for api testing:
 // test images:
