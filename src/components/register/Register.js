@@ -1,10 +1,13 @@
 import React, { useState } from "react";
+import { useHistory } from "react-router";
+
 import "./Register.css";
 
-export default function Register({ loadUser, onRouteChange }) {
+export default function Register({ loadUser, setIsSignedIn }) {
   const [registerName, setRegisterName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
+  const history = useHistory();
 
   const onRegister = () => {
     fetch("https://protected-taiga-19734.herokuapp.com/register", {
@@ -20,7 +23,8 @@ export default function Register({ loadUser, onRouteChange }) {
       .then((user) => {
         if (user.id) {
           loadUser(user);
-          onRouteChange("home");
+          setIsSignedIn(true);
+          history.push("/");
         }
       });
   };
@@ -81,7 +85,7 @@ export default function Register({ loadUser, onRouteChange }) {
           </div>
           <div className="lh-copy mt3">
             <p
-              onClick={() => onRouteChange("signin")}
+              onClick={() => history.push("/signin")}
               className="f6 links dim db pointer"
             >
               Sign in

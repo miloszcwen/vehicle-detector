@@ -8,6 +8,12 @@ import ImageRecognition from "./components/imageRecognition/ImageRecognition";
 import ImageLinkForm from "./components/ImageLinkForm/ImageLinkForm";
 import SignIn from "./components/signIn/SignIn";
 import Register from "./components/register/Register";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from "react-router-dom";
 
 const initialUser = {
   id: "",
@@ -21,7 +27,6 @@ export default function App() {
   const [input, setInput] = useState("");
   const [imgUrl, setImgUrl] = useState("");
   const [box, setBox] = useState({});
-  const [route, setRoute] = useState("signin");
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [user, setUser] = useState(initialUser);
 
@@ -67,7 +72,8 @@ export default function App() {
       })
         .then((response) => response.json())
         .then((response) => {
-          if (response) {
+          if (response.status.code === 10000) {
+            displayCarBox(calculateCarLocation(response));
             fetch("https://protected-taiga-19734.herokuapp.com/image", {
               method: "put",
               headers: { "Content-Type": "application/json" },
@@ -81,47 +87,64 @@ export default function App() {
                 console.log(error);
               });
           }
-          displayCarBox(calculateCarLocation(response));
         })
         .catch((err) => console.log(err));
     }
   };
 
-  const onRouteChange = (route) => {
-    if (route === "home") {
-      setIsSignedIn(true);
-    } else if (route === "signin") {
-      setInput("");
-      setImgUrl("");
-      setBox({});
-      setIsSignedIn(false);
-      setUser(initialUser);
-    }
-    setRoute(route);
+  const logOut = () => {
+    setInput("");
+    setImgUrl("");
+    setBox({});
+    setIsSignedIn(false);
+    setUser(initialUser);
   };
 
   return (
     <>
-      <div className="App">
-        <Particles className="particles" />
-        <Navigation onRouteChange={onRouteChange} isSignedIn={isSignedIn} />
-        {route === "home" ? (
-          <>
-            {" "}
-            <Logo />
-            <Rank userName={user.name} carCounter={user.carCounter} />
-            <ImageLinkForm
-              onInputChange={onInputChange}
-              onButtonSubmit={onPictureSubmit}
+      <Router>
+        <div className="App">
+          <Particles className="particles" />
+          <Navigation isSignedIn={isSignedIn} logOut={logOut} />
+          <Switch>
+            <Route
+              exact
+              path="/"
+              render={() =>
+                isSignedIn ? (
+                  <>
+                    {" "}
+                    <Logo />
+                    <Rank userName={user.name} carCounter={user.carCounter} />
+                    <ImageLinkForm
+                      onInputChange={onInputChange}
+                      onButtonSubmit={onPictureSubmit}
+                    />
+                    <ImageRecognition imgUrl={imgUrl} box={box} />
+                  </>
+                ) : (
+                  <Redirect to="/signin" />
+                )
+              }
             />
-            <ImageRecognition imgUrl={imgUrl} box={box} />
-          </>
-        ) : route === "signin" ? (
-          <SignIn loadUser={loadUser} onRouteChange={onRouteChange} />
-        ) : (
-          <Register loadUser={loadUser} onRouteChange={onRouteChange} />
-        )}
-      </div>
+            <Route
+              exact
+              path="/signin"
+              render={() => (
+                <SignIn loadUser={loadUser} setIsSignedIn={setIsSignedIn} />
+              )}
+            />
+            <Route
+              exact
+              path="/register"
+              render={() => (
+                <Register loadUser={loadUser} setIsSignedIn={setIsSignedIn} />
+              )}
+            />
+            <Redirect to="/" />
+          </Switch>
+        </div>
+      </Router>
     </>
   );
 }
