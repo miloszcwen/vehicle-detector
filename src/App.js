@@ -8,6 +8,12 @@ import ImageRecognition from "./components/imageRecognition/ImageRecognition";
 import ImageLinkForm from "./components/ImageLinkForm/ImageLinkForm";
 import SignIn from "./components/signIn/SignIn";
 import Register from "./components/register/Register";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect,
+} from "react-router-dom";
 
 const initialUser = {
   id: "",
@@ -21,9 +27,9 @@ export default function App() {
   const [input, setInput] = useState("");
   const [imgUrl, setImgUrl] = useState("");
   const [box, setBox] = useState({});
-  const [route, setRoute] = useState("signin");
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [user, setUser] = useState(initialUser);
+  const [status, setStatus] = useState("");
 
   const loadUser = (data) => {
     setUser({
@@ -59,15 +65,21 @@ export default function App() {
 
   const onPictureSubmit = () => {
     if (input) {
+      setStatus("waiting for image recognition API");
+      setBox({});
       setImgUrl(input);
       fetch("https://protected-taiga-19734.herokuapp.com/imageurl", {
         method: "post",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input: imgUrl }),
+        body: JSON.stringify({ input: input }),
       })
         .then((response) => response.json())
         .then((response) => {
-          if (response) {
+          if (response === "unable to work with API") {
+            setStatus("unable to work with API, please try again");
+          } else if (response.status.code === 10000) {
+            displayCarBox(calculateCarLocation(response));
+            setStatus("");
             fetch("https://protected-taiga-19734.herokuapp.com/image", {
               method: "put",
               headers: { "Content-Type": "application/json" },
@@ -78,50 +90,71 @@ export default function App() {
                 setUser({ ...user, carCounter: count });
               })
               .catch((error) => {
-                console.log(error);
+                setStatus(error);
               });
           }
-          displayCarBox(calculateCarLocation(response));
         })
-        .catch((err) => console.log(err));
+        .catch((err) => setStatus(err));
     }
   };
 
-  const onRouteChange = (route) => {
-    if (route === "home") {
-      setIsSignedIn(true);
-    } else if (route === "signin") {
-      setInput("");
-      setImgUrl("");
-      setBox({});
-      setIsSignedIn(false);
-      setUser(initialUser);
-    }
-    setRoute(route);
+  const logOut = () => {
+    setInput("");
+    setImgUrl("");
+    setBox({});
+    setIsSignedIn(false);
+    setUser(initialUser);
   };
 
   return (
     <>
-      <div className="App">
-        <Particles className="particles" />
-        <Navigation onRouteChange={onRouteChange} isSignedIn={isSignedIn} />
-        {route === "home" ? (
-          <>
-            {" "}
-            <Logo />
-            <Rank userName={user.name} carCounter={user.carCounter} />
-            <ImageLinkForm
-              onInputChange={onInputChange}
-              onButtonSubmit={onPictureSubmit}
+      <Router>
+        <div className="App">
+          <Particles className="particles" />
+          <Navigation isSignedIn={isSignedIn} logOut={logOut} />
+          <Switch>
+            <Route
+              exact
+              path="/"
+              render={() =>
+                isSignedIn ? (
+                  <>
+                    {" "}
+                    <Logo />
+                    <Rank userName={user.name} carCounter={user.carCounter} />
+                    <ImageLinkForm
+                      onInputChange={onInputChange}
+                      onButtonSubmit={onPictureSubmit}
+                    />
+                    <ImageRecognition
+                      imgUrl={imgUrl}
+                      box={box}
+                      status={status}
+                    />
+                  </>
+                ) : (
+                  <Redirect to="/signin" />
+                )
+              }
             />
-            <ImageRecognition imgUrl={imgUrl} box={box} />
-          </>
-        ) : route === "signin" ? (
-          <SignIn loadUser={loadUser} onRouteChange={onRouteChange} />
-        ) : (
-          <Register loadUser={loadUser} onRouteChange={onRouteChange} />
-        )}
-      </div>
+            <Route
+              exact
+              path="/signin"
+              render={() => (
+                <SignIn loadUser={loadUser} setIsSignedIn={setIsSignedIn} />
+              )}
+            />
+            <Route
+              exact
+              path="/register"
+              render={() => (
+                <Register loadUser={loadUser} setIsSignedIn={setIsSignedIn} />
+              )}
+            />
+            <Redirect to="/" />
+          </Switch>
+        </div>
+      </Router>
     </>
   );
 }
