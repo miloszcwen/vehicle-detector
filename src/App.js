@@ -29,6 +29,7 @@ export default function App() {
   const [box, setBox] = useState({});
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [user, setUser] = useState(initialUser);
+  const [status, setStatus] = useState("");
 
   const loadUser = (data) => {
     setUser({
@@ -64,16 +65,21 @@ export default function App() {
 
   const onPictureSubmit = () => {
     if (input) {
+      setStatus("waiting for image recognition API");
+      setBox({});
       setImgUrl(input);
       fetch("https://protected-taiga-19734.herokuapp.com/imageurl", {
         method: "post",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input: imgUrl }),
+        body: JSON.stringify({ input: input }),
       })
         .then((response) => response.json())
         .then((response) => {
-          if (response.status.code === 10000) {
+          if (response === "unable to work with API") {
+            setStatus("unable to work with API, please try again");
+          } else if (response.status.code === 10000) {
             displayCarBox(calculateCarLocation(response));
+            setStatus("");
             fetch("https://protected-taiga-19734.herokuapp.com/image", {
               method: "put",
               headers: { "Content-Type": "application/json" },
@@ -84,11 +90,11 @@ export default function App() {
                 setUser({ ...user, carCounter: count });
               })
               .catch((error) => {
-                console.log(error);
+                setStatus(error);
               });
           }
         })
-        .catch((err) => console.log(err));
+        .catch((err) => setStatus(err));
     }
   };
 
@@ -120,7 +126,11 @@ export default function App() {
                       onInputChange={onInputChange}
                       onButtonSubmit={onPictureSubmit}
                     />
-                    <ImageRecognition imgUrl={imgUrl} box={box} />
+                    <ImageRecognition
+                      imgUrl={imgUrl}
+                      box={box}
+                      status={status}
+                    />
                   </>
                 ) : (
                   <Redirect to="/signin" />
